@@ -8,6 +8,8 @@
 import Foundation
 
 struct WorkspaceResponse: Codable {
-    var workspaceId: UUID
+    var id: UUID
     var name: String
+    var created: Date
+    var modified: Date
 }

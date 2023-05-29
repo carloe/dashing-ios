@@ -6,15 +6,28 @@
 //
 
 import SwiftUI
+import RealmSwift
 
 struct ChatView: View {
-    @State var messages: [MessageModel] = []
+    @EnvironmentObject var dataController: DataController
+    
+    //@State var messages: [MessageModel] = []
     @State var draftMessage: String = ""
     @State var showHeader: Bool = false
     
+    let conversationId: UUID
+    
+    @ObservedResults(Message.self) var messages
+    
+    init(conversationId: UUID) {
+        self.conversationId = conversationId
+        _messages = ObservedResults(Message.self, where: {
+            $0.conversationId == conversationId
+        })
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
-            
             if showHeader {
                 VStack {
                     Text("Foo")
@@ -62,9 +75,9 @@ struct ChatView: View {
                     status: .pending,
                     text: text
                 )
-                withAnimation {
-                    messages.append(message)
-                }
+//                withAnimation {
+//                    messages.append(message)
+//                }
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 8)
@@ -81,6 +94,9 @@ struct ChatView: View {
                 }
             }
         }
+        .task {
+            dataController.updateMessageList(conversationId: conversationId)
+        }
     }
     
     private func scrollToLastMessage(in reader: ScrollViewProxy) {
@@ -91,8 +107,10 @@ struct ChatView: View {
     }
 }
 
+/*
 struct ChatView_Previews: PreviewProvider {
     static var previews: some View {
         ChatView()
     }
 }
+*/

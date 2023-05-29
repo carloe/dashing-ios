@@ -15,6 +15,9 @@ packages:
   SwiftfulLoadingIndicators:
     url: https://github.com/SwiftfulThinking/SwiftfulLoadingIndicators.git
     from: 0.0.4
+  RealmSwift:
+    url: https://github.com/realm/realm-swift
+    from: 10.40.0
 
 targets:
   Dashing:
@@ -30,6 +33,7 @@ targets:
       - Assets
     dependencies:
       - package: Alamofire
+      - package: RealmSwift
       - package: SwiftfulLoadingIndicators
     info:
       path: Sources/Info.plist

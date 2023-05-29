@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import RealmSwift
 
 struct ConversationList: View {
     @EnvironmentObject var dataController: DataController
@@ -13,22 +14,18 @@ struct ConversationList: View {
     @Binding var selection: UUID?
     var workspaceId: UUID
     
-    @State private var isComposing: Bool = false
+    @ObservedResults(Conversation.self) var conversations
     
-    @FetchRequest var conversations: FetchedResults<Conversation>
+    @State private var isComposing: Bool = false
 
     init(forWorkspace: UUID, selection: Binding<UUID?>) {
         workspaceId = forWorkspace
         _selection = selection
-        _conversations = FetchRequest<Conversation>(
-            sortDescriptors: [],
-            predicate: NSPredicate(format: "workspaceId == %@", "\(workspaceId)"),
-            animation: .default
-        )
     }
         
     var body: some View {
         List(selection: $selection) {
+        //List {
             ForEach(conversations) { conversation in
                 ConversationRow(name: conversation.name, lastModified: conversation.modified)
                     .tag(conversation.id)
@@ -55,7 +52,7 @@ struct ConversationList: View {
     }
     
     private var navigationTitle: String {
-        guard let conversationId = selection, let conversation = conversations.first(where: { $0.conversationId == conversationId }) else {
+        guard let conversationId = selection, let conversation = conversations.first(where: { $0.id == conversationId }) else {
             return ""
         }
         return conversation.name

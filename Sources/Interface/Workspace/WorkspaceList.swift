@@ -6,15 +6,12 @@
 //
 
 import SwiftUI
+import RealmSwift
 
 struct WorkspaceList: View {
     @Binding var selected: UUID?
     
-    @FetchRequest(
-        sortDescriptors: [
-//            SortDescriptor(Workspace.name)
-        ]
-    ) var workspaces: FetchedResults<Workspace>
+    @ObservedResults(Workspace.self) var workspaces
     
     var body: some View {
         List(selection: $selected) {

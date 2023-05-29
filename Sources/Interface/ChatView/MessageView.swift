@@ -9,13 +9,13 @@ import SwiftUI
 import SwiftfulLoadingIndicators
 
 struct MessageView: View {
-    var message: MessageModel
+    var message: Message
     
     @State var lineHeight: CGFloat? = nil
     
     var body: some View {
         HStack {
-            if message.sender == .user {
+            if message.role == "user" {
                 renderSpacer()
             }
             
@@ -34,6 +34,10 @@ struct MessageView: View {
                     }
                     .opacity(0)
                 
+                Text(message.content)
+                    .textSelection(.enabled)
+                
+                /*
                 Group {
                     switch message.status {
                     case .pending:
@@ -46,6 +50,7 @@ struct MessageView: View {
                             .textSelection(.enabled)
                     }
                 }
+                 */
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -56,16 +61,19 @@ struct MessageView: View {
                 }
             }
             
-            if message.sender == .assistant {
+            if message.role != "user" {
                 renderSpacer()
             }
         }
-        .frame(maxWidth: .infinity, alignment: message.sender == .assistant ? .leading : .trailing)
+        .frame(maxWidth: .infinity, alignment: message.role != "user" ? .trailing : .leading)
         //.transition(.move(edge: message.sender == .assistant ? .leading : .trailing))
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
     
+    
     private var backgroundColor: Color {
+        return message.role == "user" ? Color.secondaryMessageBackground : Color.messageBackground
+        /*
         switch message.status {
         case .failed:
             return .red
@@ -74,6 +82,7 @@ struct MessageView: View {
         case .sent:
             return message.sender == .assistant ? Color.messageBackground : Color.secondaryMessageBackground
         }
+         */
     }
     
     private func renderSpacer() -> some View {
@@ -84,6 +93,7 @@ struct MessageView: View {
     }
 }
 
+/*
 struct MessageView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
@@ -106,3 +116,4 @@ struct MessageView_Previews: PreviewProvider {
         .frame(maxWidth: 600)
     }
 }
+*/

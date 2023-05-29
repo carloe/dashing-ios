@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/*
 struct ConversationView: View {
     @State private var isComposing: Bool = false
     
@@ -37,3 +38,4 @@ struct ConversationView_Previews: PreviewProvider {
         ConversationView()
     }
 }
+*/

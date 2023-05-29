@@ -37,7 +37,7 @@ struct ContentView: View {
         } detail: {
             Group {
                 if pathStore.conversationId != nil {
-                    ChatView()
+                    ChatView(conversationId: pathStore.conversationId!)
                 }
                 else {
                     Text("Empty View")

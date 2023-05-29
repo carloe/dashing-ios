@@ -8,7 +8,9 @@
 import Foundation
 
 struct ConversationResponse: Codable {
-    var conversationId: UUID
+    var id: UUID
     var name: String
     var workspaceId: UUID
+    var created: Date
+    var modified: Date
 }
