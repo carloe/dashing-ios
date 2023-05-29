@@ -1,0 +1,49 @@
+name: Dashing
+settings:
+  base:
+    DEVELOPMENT_TEAM: BT87CGX75J
+    PRODUCT_BUNDLE_IDENTIFIER: com.relaunch.dashing
+    SWIFT_USE_INTEGRATED_DRIVER: false
+options:
+  deploymentTarget:
+    iOS: "16.4"
+    macOS: "13.3"
+packages:
+  Alamofire:
+    url: https://github.com/alamofire/alamofire
+    from: 5.6.4
+  SwiftfulLoadingIndicators:
+    url: https://github.com/SwiftfulThinking/SwiftfulLoadingIndicators.git
+    from: 0.0.4
+
+targets:
+  Dashing:
+    type: application
+    platform: iOS
+    settings:
+      SUPPORTED_PLATFORMS: "iphoneos iphonesimulator macosx"
+      SUPPORTS_MACCATALYST: "NO"
+      SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: "NO"
+      OTHER_LDFLAGS: -ObjC
+    sources:
+      - Sources
+      - Assets
+    dependencies:
+      - package: Alamofire
+      - package: SwiftfulLoadingIndicators
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleShortVersionString: 0.0.1
+        CFBundleVersion: 0.0.1
+        UILaunchScreen:
+          UIImageName: LaunchImage
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+    entitlements:
+      path: Sources/Dashing.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.files.user-selected.read-only: true
+        com.apple.security.network.client: true
+        com.apple.security.network.server: false
