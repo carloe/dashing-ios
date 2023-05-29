@@ -42,13 +42,15 @@ struct ChatView: View {
                             MessageView(message: model)
                                 .id(model.id)
                         }
-                        .onChange(of: messages.count) { _ in
-                            scrollToLastMessage(in: proxy)
-                        }
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    
+                }
+                .onAppear {
+                    scrollToLastMessage(in: proxy)
+                }
+                .onChange(of: messages.count) { _ in
+                    scrollToLastMessage(in: proxy)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .overlay {
@@ -70,14 +72,7 @@ struct ChatView: View {
             Divider()
             
             ChatInputView(text: $draftMessage) { text in
-                let message = MessageModel(
-                    sender: .user,
-                    status: .pending,
-                    text: text
-                )
-//                withAnimation {
-//                    messages.append(message)
-//                }
+                dataController.sendMessage(text, conversationId: conversationId)
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 8)
@@ -101,16 +96,8 @@ struct ChatView: View {
     
     private func scrollToLastMessage(in reader: ScrollViewProxy) {
         guard let lastMessage = messages.last else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            reader.scrollTo(lastMessage.id, anchor: .bottom)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            reader.scrollTo(lastMessage.id, anchor: .zero)
         }
     }
 }
-
-/*
-struct ChatView_Previews: PreviewProvider {
-    static var previews: some View {
-        ChatView()
-    }
-}
-*/

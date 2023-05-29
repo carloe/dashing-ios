@@ -13,6 +13,7 @@ protocol ServiceProtocol {
     func fetchWorkspace() -> AnyPublisher<DataResponse<[Workspace], NetworkError>, Never>
     func fetchConversation(workspaceId: UUID) -> AnyPublisher<DataResponse<[Conversation], NetworkError>, Never>
     func fetchMessages(conversationId: UUID) -> AnyPublisher<DataResponse<[Message], NetworkError>, Never>
+    func sendMessage(_ message: Message) -> AnyPublisher<DataResponse<[Message], NetworkError>, Never> 
 }
 
 class Service {
@@ -63,6 +64,28 @@ extension Service: ServiceProtocol {
         let url = URL(string: "https://avalon.carlo.io/api/messages/")!
         
         return AF.request(url, method: .get)
+            .validate()
+            .publishDecodable(type: [Message].self, decoder: self.decoder)
+            .map { response in
+                response.mapError { error in
+                    let backendError = response.data.flatMap { try? self.decoder.decode(BackendError.self, from: $0)}
+                    return NetworkError(initialError: error, backendError: backendError)
+                }
+            }
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+    
+    func sendMessage(_ message: Message) -> AnyPublisher<DataResponse<[Message], NetworkError>, Never> {
+        let url = URL(string: "https://avalon.carlo.io/api/messages/")!
+        
+        let parameters: [String: Any] = [
+            "conversation_id": message.conversationId.uuidString,
+            "content": message.content,
+            "role": message.role
+        ]
+    
+        return AF.request(url, method: .post, parameters: parameters, encoding: JSONEncoding.default)
             .validate()
             .publishDecodable(type: [Message].self, decoder: self.decoder)
             .map { response in

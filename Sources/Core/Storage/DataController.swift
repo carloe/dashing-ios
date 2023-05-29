@@ -66,6 +66,38 @@ extension DataController {
 }
 
 extension DataController {
+    
+    func sendMessage(_ content: String, conversationId: UUID) {
+        // Create the pending message
+        let message = Message()
+        message.id = UUID()
+        message.conversationId = conversationId
+        message.content = content
+        message.created = Date()
+        message.roleEnum = .user
+        message.statusEnum = .pending
+        
+        try! self.realm.write {
+            realm.add(message)
+        }
+        
+        apiService.sendMessage(message)
+            .sink { (dataResponse) in
+                if dataResponse.error != nil {
+                    print("Error: \(dataResponse.error!)")
+                } else {
+                    try! self.realm.write {
+                        for message in dataResponse.value! {
+                            message.statusEnum = .final
+                            self.realm.create(Message.self, value: message, update: .modified)
+                        }
+                        self.realm.delete(message)
+                    }
+                    
+                }
+            }.store(in: &cancellableSet)
+    }
+    
     func updateMessageList(conversationId: UUID) {
         apiService.fetchMessages(conversationId: conversationId)
             .sink { (dataResponse) in
@@ -74,6 +106,7 @@ extension DataController {
                 } else {
                     try! self.realm.write {
                         for message in dataResponse.value! {
+                            message.statusEnum = .final
                             self.realm.create(Message.self, value: message, update: .modified)
                         }
                     }
