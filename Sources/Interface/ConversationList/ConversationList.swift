@@ -10,26 +10,27 @@ import RealmSwift
 
 struct ConversationList: View {
     @EnvironmentObject var dataController: DataController
-
+    
     @Binding var selection: UUID?
-    var workspaceId: UUID
+    let workspaceId: UUID
     
     @ObservedResults(Conversation.self) var conversations
     
     @State private var isComposing: Bool = false
-
+    
     init(forWorkspace: UUID, selection: Binding<UUID?>) {
         workspaceId = forWorkspace
         _selection = selection
-    }
         
+        _conversations = ObservedResults(Conversation.self, where: {
+            $0.workspaceId == forWorkspace
+        })
+    }
+    
     var body: some View {
-        List(selection: $selection) {
-        //List {
-            ForEach(conversations) { conversation in
-                ConversationRow(name: conversation.name, lastModified: conversation.modified)
-                    .tag(conversation.id)
-            }
+        List(conversations, selection: $selection) { conversation in
+            ConversationRow(name: conversation.name, lastModified: conversation.modified)
+                .tag(conversation.id)
         }
         .listStyle(.sidebar)
         .listRowSeparator(.visible)
@@ -57,7 +58,6 @@ struct ConversationList: View {
         }
         return conversation.name
     }
-
 }
 
 struct ConversationRow: View {
@@ -83,7 +83,6 @@ struct ConversationRow: View {
                         .font(.system(.headline, weight: .bold))
                     Spacer()
                     Text(lastModified, style: .relative)
-//                    Text("\(lastModified)")
                         .foregroundColor(.secondary)
                         .font(.system(.caption, weight: .semibold))
                 }

@@ -15,7 +15,7 @@ struct ChatView: View {
     @State var draftMessage: String = ""
     @State var showHeader: Bool = false
     
-    let conversationId: UUID
+    var conversationId: UUID
     
     @ObservedResults(Message.self) var messages
     

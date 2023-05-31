@@ -19,16 +19,12 @@ class DataController: ObservableObject {
         let decoder = JSONDecoder()
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZZZZ"
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         decoder.dateDecodingStrategy = .formatted(formatter)
         self.apiService = Service(decoder: decoder)
         self.realm = realm
     }
-}
-
-extension DataController {
-    
 }
 
 extension DataController {

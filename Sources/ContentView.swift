@@ -8,26 +8,21 @@
 import SwiftUI
 import Combine
 
-struct Context: Identifiable {
-    var id: Int
-    var title: String
-}
-
-
 
 struct ContentView: View {
     @EnvironmentObject var dataController: DataController
     
     @StateObject private var pathStore = PathStore()
+    @State var splitViewVisibility: NavigationSplitViewVisibility = .all
     
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $splitViewVisibility) {
             WorkspaceList(selected: $pathStore.workspaceId)
                 .navigationTitle("Workspace")
         } content: {
-            if pathStore.workspaceId != nil {
+            if let workspaceId = pathStore.workspaceId {
                 ConversationList(
-                    forWorkspace: pathStore.workspaceId!,
+                    forWorkspace: workspaceId,
                     selection: $pathStore.conversationId
                 )
             }
@@ -35,16 +30,14 @@ struct ContentView: View {
                 Text("Select a Workspace")
             }
         } detail: {
-            Group {
-                if pathStore.conversationId != nil {
-                    ChatView(conversationId: pathStore.conversationId!)
-                }
-                else {
-                    Text("Empty View")
-                }
+            if let conversationId = pathStore.conversationId {
+                ChatView(conversationId: conversationId)
             }
-            .navigationTitle("Coffee")
+            else {
+                Text("Select a Conversation")
+            }
         }
+        .navigationSplitViewStyle(.balanced)
         .toolbar {
             ToolbarItem(placement: .automatic) {
                 Button {
