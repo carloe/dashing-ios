@@ -18,6 +18,7 @@ struct DashingApp: SwiftUI.App {
     
     init() {
         let realm = try! Realm(configuration: realmConfiguration)
+        try? realm.removeOrphans()
         _dataController = StateObject(wrappedValue: DataController(realm: realm))
     }
     
