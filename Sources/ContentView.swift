@@ -51,6 +51,9 @@ struct ContentView: View {
             pathStore.load()
             dataController.updateWorkspaceList()
         }
+        .onAppear {
+            dataController.startSocket()
+        }
     }
 }
 

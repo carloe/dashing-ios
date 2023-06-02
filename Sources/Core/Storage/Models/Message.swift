@@ -15,11 +15,11 @@ enum MessageRole: String {
     case assistant
 }
 
-enum MessageStatus: String {
+enum MessageState: String {
     case unknown
     case pending
-    case final
-    case error
+    case confirmed
+    case rejected
 }
 
 final class Message: Object, ObjectKeyIdentifiable, Codable {
@@ -27,6 +27,7 @@ final class Message: Object, ObjectKeyIdentifiable, Codable {
     @Persisted var content: String
     @Persisted var conversationId: UUID
     @Persisted var created: Date
+    @Persisted var modified: Date
     
     @Persisted var role: String = MessageRole.unknown.rawValue
     var roleEnum: MessageRole {
@@ -34,10 +35,11 @@ final class Message: Object, ObjectKeyIdentifiable, Codable {
         set { role = newValue.rawValue}
     }
     
-    @Persisted var status: String? = MessageStatus.unknown.rawValue
-    var statusEnum: MessageStatus {
-        get { if let status = status { return MessageStatus(rawValue: status)! } else { return .unknown } }
-        set { status = newValue.rawValue }
+    @Persisted var state: String? = MessageState.unknown.rawValue
+    var stateEnum: MessageState {
+        get { return MessageState(rawValue: state ?? "") ?? .unknown }
+            //if let state = state { return MessageState(rawValue: state) ?? .unknown } else { return .unknown } }
+        set { state = newValue.rawValue }
     }
 }
 

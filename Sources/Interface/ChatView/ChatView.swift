@@ -11,7 +11,6 @@ import RealmSwift
 struct ChatView: View {
     @EnvironmentObject var dataController: DataController
     
-    //@State var messages: [MessageModel] = []
     @State var draftMessage: String = ""
     @State var showHeader: Bool = false
     
@@ -23,7 +22,7 @@ struct ChatView: View {
         self.conversationId = conversationId
         _messages = ObservedResults(Message.self, where: {
             $0.conversationId == conversationId
-        })
+        }, sortDescriptor: SortDescriptor(keyPath: "created", ascending: true))
     }
     
     var body: some View {

@@ -15,19 +15,19 @@ struct MessageView: View {
     
     @ViewBuilder
     private func renderOverlay() -> some View {
-            switch message.statusEnum {
-            case .final, .pending, .unknown:
+            switch message.stateEnum {
+            case .confirmed, .pending, .unknown:
                 EmptyView()
-            case .error:
+            case .rejected:
                 Text("Failed")
             }
     }
     
     private var opacity: CGFloat {
-        switch message.statusEnum {
+        switch message.stateEnum {
         case .pending, .unknown:
             return 0.5
-        case .error, .final:
+        case .rejected, .confirmed:
             return 1
         }
     }
@@ -81,12 +81,12 @@ struct MessageView: View {
     
     
     private var backgroundColor: Color {
-         switch message.statusEnum {
-         case .error:
+         switch message.stateEnum {
+         case .rejected:
              return .red
          case .pending, .unknown:
              return .gray
-         case .final:
+         case .confirmed:
              return message.roleEnum != .user ? Color.secondaryMessageBackground : Color.messageBackground
          }
     }

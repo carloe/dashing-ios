@@ -9,25 +9,29 @@ import Foundation
 import Combine
 import Alamofire
 
-protocol ServiceProtocol {
-    func fetchWorkspace() -> AnyPublisher<DataResponse<[Workspace], NetworkError>, Never>
-    func fetchConversation(workspaceId: UUID) -> AnyPublisher<DataResponse<[Conversation], NetworkError>, Never>
-    func fetchMessages(conversationId: UUID) -> AnyPublisher<DataResponse<[Message], NetworkError>, Never>
-    func sendMessage(_ message: Message) -> AnyPublisher<DataResponse<[Message], NetworkError>, Never> 
-}
-
-class Service {
-    //static let shared: ServiceProtocol = Service()
+class RESTClient {
     let decoder: JSONDecoder
     
-    init(decoder: JSONDecoder) {
-        self.decoder = decoder
-        self.decoder.keyDecodingStrategy = .convertFromSnakeCase
+    init(decoder: JSONDecoder? = nil) {
+        if let decoder = decoder {
+            self.decoder = decoder
+        }
+        else {
+            let decoder = JSONDecoder()
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZZZZ"
+            formatter.timeZone = TimeZone(secondsFromGMT: 0)
+            decoder.dateDecodingStrategy = .formatted(formatter)
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            self.decoder = decoder
+        }
+        
     }
 }
 
 
-extension Service: ServiceProtocol {
+extension RESTClient: RESTClientProtocol {
     func fetchWorkspace() -> AnyPublisher<DataResponse<[Workspace], NetworkError>, Never> {
         let url = URL(string: "https://avalon.carlo.io/api/workspaces/")!
         

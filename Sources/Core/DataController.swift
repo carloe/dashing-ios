@@ -9,33 +9,71 @@ import Foundation
 import RealmSwift
 import Combine
 
+// MARK: - Main -
+
 class DataController: ObservableObject {
     
     private var cancellableSet: Set<AnyCancellable> = []
-    let apiService: ServiceProtocol
+    let restClient: RESTClientProtocol
     let realm: Realm
     
-    init(realm: Realm = try! Realm()) {
-        let decoder = JSONDecoder()
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZZZZ"
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        decoder.dateDecodingStrategy = .formatted(formatter)
-        self.apiService = Service(decoder: decoder)
+    let socketClient: WebsocketClientProtocol
+    
+    init(
+        realm: Realm,
+        restClient: RESTClientProtocol,
+        socketClient: WebsocketClientProtocol
+    ) {
+        self.restClient = restClient
         self.realm = realm
+        self.socketClient = socketClient
     }
 }
 
+// MARK: - WebSockets -
+
+extension DataController {
+    func startSocket() {
+        socketClient.connect { newMessage in
+            try! self.realm.write {
+                switch newMessage {
+                case let .message(model):
+                    self.realm.create(Message.self, value: model, update: .modified)
+                case let .conversation(model):
+                    self.realm.create(Conversation.self, value: model, update: .modified)
+                case let .workspace(model):
+                    self.realm.create(Conversation.self, value: model, update: .modified)
+                }
+            }
+        }
+    }
+    
+    func stopSocket() {
+        socketClient.disconnect()
+    }
+}
+
+// MARK: - Rest API -
+
 extension DataController {
     func updateWorkspaceList() {
-        apiService.fetchWorkspace()
+        restClient.fetchWorkspace()
             .sink { (dataResponse) in
                 if dataResponse.error != nil {
                     print("Error: \(dataResponse.error!)")
                 } else {
+                    guard let newWorkspaces = dataResponse.value else {
+                        print("Error: Value was nil eventhough there was no error")
+                        return
+                    }
+                    
+                    let oldWorkspaces = self.realm.objects(Workspace.self)
+                    let newWorkspaceIDs = Set(newWorkspaces.map { $0.id })
+                    let diffWorkspaces = Array(oldWorkspaces.filter { !newWorkspaceIDs.contains($0.id) })
+                    
                     try! self.realm.write {
-                        for workspace in dataResponse.value! {
+                        self.realm.cascadeDelete(workspaces: diffWorkspaces)
+                        for workspace in newWorkspaces {
                             self.realm.create(Workspace.self, value: workspace, update: .modified)
                         }
                     }
@@ -46,7 +84,7 @@ extension DataController {
 
 extension DataController {
     func updateConversationList(workspaceId: UUID) {
-        apiService.fetchConversation(workspaceId: workspaceId)
+        restClient.fetchConversation(workspaceId: workspaceId)
             .sink { (dataResponse) in
                 if dataResponse.error != nil {
                     print("Error: \(dataResponse.error!)")
@@ -71,20 +109,19 @@ extension DataController {
         message.content = content
         message.created = Date()
         message.roleEnum = .user
-        message.statusEnum = .pending
+        message.stateEnum = .pending
         
         try! self.realm.write {
             realm.add(message)
         }
         
-        apiService.sendMessage(message)
+        restClient.sendMessage(message)
             .sink { (dataResponse) in
                 if dataResponse.error != nil {
                     print("Error: \(dataResponse.error!)")
                 } else {
                     try! self.realm.write {
                         for message in dataResponse.value! {
-                            message.statusEnum = .final
                             self.realm.create(Message.self, value: message, update: .modified)
                         }
                         self.realm.delete(message)
@@ -95,14 +132,13 @@ extension DataController {
     }
     
     func updateMessageList(conversationId: UUID) {
-        apiService.fetchMessages(conversationId: conversationId)
+        restClient.fetchMessages(conversationId: conversationId)
             .sink { (dataResponse) in
                 if dataResponse.error != nil {
                     print("Error: \(dataResponse.error!)")
                 } else {
                     try! self.realm.write {
                         for message in dataResponse.value! {
-                            message.statusEnum = .final
                             self.realm.create(Message.self, value: message, update: .modified)
                         }
                     }
