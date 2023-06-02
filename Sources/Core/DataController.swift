@@ -8,25 +8,37 @@
 import Foundation
 import RealmSwift
 import Combine
+import Network
 
 // MARK: - Main -
 
 class DataController: ObservableObject {
-    
-    private var cancellableSet: Set<AnyCancellable> = []
-    let restClient: RESTClientProtocol
     let realm: Realm
+    let restClient: RESTClientProtocol
+    private(set) var socketClient: WebsocketClientProtocol
+    let networkMonitor: NetworkMonitor
     
-    let socketClient: WebsocketClientProtocol
+    private var isReachable: Bool = false
+    private var cancellableSet: Set<AnyCancellable> = []
     
     init(
         realm: Realm,
         restClient: RESTClientProtocol,
-        socketClient: WebsocketClientProtocol
+        socketClient: WebsocketClientProtocol,
+        networkMonitor: NetworkMonitor
     ) {
         self.restClient = restClient
         self.realm = realm
         self.socketClient = socketClient
+        self.networkMonitor = networkMonitor
+        self.isReachable = networkMonitor.isConnected
+        self.networkMonitor.$isConnected.sink { isReachable in
+            if self.isReachable != isReachable {
+                print("State changed to \(isReachable ? "Reachable" : "Offline")")
+                self.isReachable = isReachable
+                self.socketClient.isReachable = isReachable
+            }
+        }.store(in: &cancellableSet)
     }
 }
 

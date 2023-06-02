@@ -11,8 +11,13 @@ import Alamofire
 
 class RESTClient {
     let decoder: JSONDecoder
+    let baseURL: URL
     
-    init(decoder: JSONDecoder? = nil) {
+    init(
+        url: URL,
+        decoder: JSONDecoder? = nil
+    ) {
+        self.baseURL = url
         if let decoder = decoder {
             self.decoder = decoder
         }
@@ -26,15 +31,13 @@ class RESTClient {
             decoder.keyDecodingStrategy = .convertFromSnakeCase
             self.decoder = decoder
         }
-        
     }
 }
 
 
 extension RESTClient: RESTClientProtocol {
     func fetchWorkspace() -> AnyPublisher<DataResponse<[Workspace], NetworkError>, Never> {
-        let url = URL(string: "https://avalon.carlo.io/api/workspaces/")!
-        
+        let url = self.baseURL.appendingPathComponent("/workspaces/")
         return AF.request(url, method: .get)
             .validate()
             .publishDecodable(type: [Workspace].self, decoder: self.decoder)
@@ -49,8 +52,7 @@ extension RESTClient: RESTClientProtocol {
     }
 
     func fetchConversation(workspaceId: UUID) -> AnyPublisher<DataResponse<[Conversation], NetworkError>, Never> {
-        let url = URL(string: "https://avalon.carlo.io/api/conversations/")!
-        
+        let url = self.baseURL.appendingPathComponent("/conversations/")
         return AF.request(url, method: .get)
             .validate()
             .publishDecodable(type: [Conversation].self, decoder: self.decoder)
@@ -65,8 +67,7 @@ extension RESTClient: RESTClientProtocol {
     }
     
     func fetchMessages(conversationId: UUID) -> AnyPublisher<DataResponse<[Message], NetworkError>, Never> {
-        let url = URL(string: "https://avalon.carlo.io/api/messages/")!
-        
+        let url = self.baseURL.appendingPathComponent("/messages/")
         return AF.request(url, method: .get)
             .validate()
             .publishDecodable(type: [Message].self, decoder: self.decoder)
@@ -81,14 +82,12 @@ extension RESTClient: RESTClientProtocol {
     }
     
     func sendMessage(_ message: Message) -> AnyPublisher<DataResponse<[Message], NetworkError>, Never> {
-        let url = URL(string: "https://avalon.carlo.io/api/messages/")!
-        
+        let url = self.baseURL.appendingPathComponent("/messages/")
         let parameters: [String: Any] = [
             "conversation_id": message.conversationId.uuidString,
             "content": message.content,
             "role": message.role
         ]
-    
         return AF.request(url, method: .post, parameters: parameters, encoding: JSONEncoding.default)
             .validate()
             .publishDecodable(type: [Message].self, decoder: self.decoder)
